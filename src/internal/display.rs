@@ -8,7 +8,7 @@ pub struct Display {
 }
 
 impl Display {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             buffer: [false; BUFFER_SIZE],
         }

@@ -3,6 +3,9 @@ pub struct Keypad {
 }
 
 impl Keypad {
+    pub fn new() -> Self {
+        Self { keys: [false; 16] }
+    }
     fn is_pressed(&self, idx: usize) -> bool {
         return self.keys[idx];
     }
