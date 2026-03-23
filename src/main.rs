@@ -1,5 +1,4 @@
-mod display;
-mod font;
+mod internal;
 
 fn main() {
     println!("Hello, world!");
