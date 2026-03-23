@@ -20,4 +20,17 @@ impl Chip8 {
 
         chip8
     }
+
+    fn load_rom(rom_path: String) -> Result<String, String> {
+        let rom_bytes = match std::fs::read(rom_path) {
+            Ok(f) => f,
+            Err(e) => return Err(e.to_string()),
+        };
+
+        if rom_bytes.len() > (4096 - 0x050) {
+            return Err("Rom Too Large!!!".to_string());
+        };
+
+        Ok("Loaded Rom Into memory".to_string())
+    }
 }
