@@ -84,4 +84,11 @@ impl CPU {
             cpu.program_counter += 2;
         }
     }
+
+    // Skip next instruction if Vx != kk.
+    fn SNEVx(cpu: &mut CPU, register: usize, payload: u8) {
+        if !(cpu.regs[register] != payload) {
+            cpu.program_counter += 2;
+        }
+    }
 }
