@@ -1,6 +1,6 @@
 use std::fmt::Error;
 
-use crate::internal::{display::Display, keypad::Keypad};
+use crate::internal::{cpu, display::Display, keypad::Keypad};
 
 pub struct CPU {
     regs: [u8; 16],
@@ -127,5 +127,10 @@ impl CPU {
     // Set Vx to Vx btwise and'ed Vy
     fn ANDVxVy(cpu: &mut CPU, register_x: usize, register_y: usize) {
         cpu.regs[register_x] = cpu.regs[register_x] & cpu.regs[register_y];
+    }
+
+    // Set Vx to Vx bitwise xor'ed Vy
+    fn XORVxVy(cpu: &mut CPU, register_x: usize, register_y: usize) {
+        cpu.regs[register_x] = cpu.regs[register_x] ^ cpu.regs[register_y];
     }
 }
