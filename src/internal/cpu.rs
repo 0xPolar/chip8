@@ -49,7 +49,7 @@ impl CPU {
         match (opcode & 0xF000) {
             0x0000 => match opcode {
                 0x00E0 => display.clear(),
-                0x00EE => CPU::ret(self),
+                0x00EE => CPU::RET(self),
 
                 _ => return Err(format!("Unknown Opcode: {:#06x}", opcode)),
             },
@@ -102,5 +102,10 @@ impl CPU {
     // Set Vx to KK
     fn LDVx(cpu: &mut CPU, register: usize, payload: u8) {
         cpu.regs[register] = payload;
+    }
+
+    // Add kk to Vx and store in Vx
+    fn ADDVx(cpu: &mut CPU, register: usize, payload: u8) {
+        cpu.regs[register] += payload;
     }
 }
