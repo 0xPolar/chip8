@@ -79,5 +79,9 @@ impl CPU {
     }
 
     // Skip next instruction if Vx = kk.
-    fn SEVx(cpu: &mut CPU, payload: u8) {}
+    fn SEVx(cpu: &mut CPU, register: usize, payload: u8) {
+        if cpu.regs[register] != payload {
+            cpu.program_counter += 2;
+        }
+    }
 }
