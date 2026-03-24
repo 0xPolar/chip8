@@ -133,4 +133,15 @@ impl CPU {
     fn XORVxVy(cpu: &mut CPU, register_x: usize, register_y: usize) {
         cpu.regs[register_x] = cpu.regs[register_x] ^ cpu.regs[register_y];
     }
+
+    // Set Vx to Vx + Vy, Vf to carry
+    fn CRRYADD(cpu: &mut CPU, register_x: usize, register_y: usize) {
+        let sum: u16 = cpu.regs[register_x] as u16 + cpu.regs[register_y] as u16;
+
+        if sum > 255 {
+            cpu.regs[0xF] = 1;
+        }
+
+        cpu.regs[register_x] = sum as u8;
+    }
 }
