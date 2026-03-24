@@ -60,18 +60,18 @@ impl CPU {
     }
 
     // Return
-    fn ret(cpu: &mut CPU) {
+    fn RET(cpu: &mut CPU) {
         cpu.program_counter = cpu.stack[cpu.stack_pointer as usize];
         cpu.stack_pointer -= 1;
     }
 
     // Jump addr
-    fn jp(cpu: &mut CPU, addr: u16) {
+    fn JP(cpu: &mut CPU, addr: u16) {
         cpu.program_counter = addr;
     }
 
     // Call addr
-    fn call(cpu: &mut CPU, addr: u16) {
+    fn CALL(cpu: &mut CPU, addr: u16) {
         cpu.stack_pointer += 1;
         cpu.stack[cpu.stack_pointer as usize] = cpu.program_counter;
 
@@ -80,7 +80,7 @@ impl CPU {
 
     // Skip next instruction if Vx = kk.
     fn SEVx(cpu: &mut CPU, register: usize, payload: u8) {
-        if cpu.regs[register] != payload {
+        if cpu.regs[register] == payload {
             cpu.program_counter += 2;
         }
     }
@@ -88,6 +88,13 @@ impl CPU {
     // Skip next instruction if Vx != kk.
     fn SNEVx(cpu: &mut CPU, register: usize, payload: u8) {
         if !(cpu.regs[register] != payload) {
+            cpu.program_counter += 2;
+        }
+    }
+
+    // Skip next instruction if Vx = Vy
+    fn SEVxVy(cpu: &mut CPU, register_x: usize, register_y: usize) {
+        if cpu.regs[register_x] == cpu.regs[register_y] {
             cpu.program_counter += 2;
         }
     }
