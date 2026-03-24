@@ -98,4 +98,9 @@ impl CPU {
             cpu.program_counter += 2;
         }
     }
+
+    // Set Vx to KK
+    fn LDVx(cpu: &mut CPU, register: usize, payload: u8) {
+        cpu.regs[register] = payload;
+    }
 }
