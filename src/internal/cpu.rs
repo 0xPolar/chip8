@@ -59,6 +59,11 @@ impl CPU {
         Ok(())
     }
 
+    // Clear Display Screen
+    fn CLS(display: &mut Display) {
+        display.clear();
+    }
+
     // Return
     fn RET(cpu: &mut CPU) {
         cpu.program_counter = cpu.stack[cpu.stack_pointer as usize];
@@ -112,5 +117,15 @@ impl CPU {
     // Store the value of register Vy in Vx
     fn LDVxVy(cpu: &mut CPU, register_x: usize, register_y: usize) {
         cpu.regs[register_x] = cpu.regs[register_y]
+    }
+
+    // Set Vx to Vx bitwise or'ed Vy
+    fn ORVxVy(cpu: &mut CPU, register_x: usize, register_y: usize) {
+        cpu.regs[register_x] = cpu.regs[register_x] | cpu.regs[register_y];
+    }
+
+    // Set Vx to Vx btwise and'ed Vy
+    fn ANDVxVy(cpu: &mut CPU, register_x: usize, register_y: usize) {
+        cpu.regs[register_x] = cpu.regs[register_x] & cpu.regs[register_y];
     }
 }
