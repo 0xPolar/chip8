@@ -1,3 +1,7 @@
+use std::fmt::Error;
+
+use crate::internal::{display::Display, keypad::Keypad};
+
 pub struct CPU {
     regs: [u8; 16],
     index: u16,
@@ -20,4 +24,60 @@ impl CPU {
             sound_timer: 0x00,
         }
     }
+
+    pub fn fetch(&self, memory: &[u8; 4096]) -> u16 {
+        let high_byte = memory[self.program_counter as usize];
+        let low_byte = memory[self.program_counter as usize + 1];
+
+        return (high_byte as u16) << 8 | (low_byte as u16);
+    }
+
+    pub fn execute(
+        &mut self,
+        opcode: u16,
+        memory: &mut [u8; 4096],
+        display: &mut Display,
+        keypad: &Keypad,
+    ) -> Result<(), String> {
+        let nnn = opcode & 0x0FFF;
+        let nn = (opcode & 0x00FF) as u8;
+        let n = (opcode & 0x000F) as u8;
+
+        let x = ((opcode * 0x0F00) >> 8) as usize;
+        let y = ((opcode & 0x00F0) >> 4) as usize;
+
+        match (opcode & 0xF000) {
+            0x0000 => match opcode {
+                0x00E0 => display.clear(),
+                0x00EE => CPU::ret(self),
+
+                _ => return Err(format!("Unknown Opcode: {:#06x}", opcode)),
+            },
+
+            _ => return Err(format!("Unknown Opcode: {:#06x}", opcode)),
+        }
+        Ok(())
+    }
+
+    // Return
+    fn ret(cpu: &mut CPU) {
+        cpu.program_counter = cpu.stack[cpu.stack_pointer as usize];
+        cpu.stack_pointer -= 1;
+    }
+
+    // Jump addr
+    fn jp(cpu: &mut CPU, addr: u16) {
+        cpu.program_counter = addr;
+    }
+
+    // Call addr
+    fn call(cpu: &mut CPU, addr: u16) {
+        cpu.stack_pointer += 1;
+        cpu.stack[cpu.stack_pointer as usize] = cpu.program_counter;
+
+        cpu.program_counter = addr;
+    }
+
+    // Skip next instruction if Vx = kk.
+    fn SEVx(cpu: &mut CPU, payload: u8) {}
 }

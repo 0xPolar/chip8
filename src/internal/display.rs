@@ -14,15 +14,15 @@ impl Display {
         }
     }
     // Clear the screen
-    fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.buffer = [false; BUFFER_SIZE];
     }
 
-    fn get_pixel(&self, x: usize, y: usize) -> bool {
+    pub fn get_pixel(&self, x: usize, y: usize) -> bool {
         return self.buffer[y * DISPLAY_WIDTH + x];
     }
 
-    fn draw_sprite(&mut self, x_start: usize, y_start: usize, sprite_bytes: &[u8]) -> bool {
+    pub fn draw_sprite(&mut self, x_start: usize, y_start: usize, sprite_bytes: &[u8]) -> bool {
         let mut collision = false;
 
         for (row, &byte) in sprite_bytes.iter().enumerate() {
