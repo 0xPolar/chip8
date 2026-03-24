@@ -108,4 +108,9 @@ impl CPU {
     fn ADDVx(cpu: &mut CPU, register: usize, payload: u8) {
         cpu.regs[register] += payload;
     }
+
+    // Store the value of register Vy in Vx
+    fn LDVxVy(cpu: &mut CPU, register_x: usize, register_y: usize) {
+        cpu.regs[register_x] = cpu.regs[register_y]
+    }
 }
