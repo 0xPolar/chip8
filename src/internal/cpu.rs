@@ -1,5 +1,7 @@
 use std::fmt::Error;
 
+use rand::{Rng, RngExt};
+
 use crate::internal::{display::Display, keypad::Keypad};
 
 pub struct CPU {
@@ -208,5 +210,28 @@ impl CPU {
         let addr = cpu.regs[0] as u16 + payload;
 
         cpu.PC = addr;
+    }
+
+    // Set Vx = random byte AND kk
+    fn RNDVx(cpu: &mut CPU, Rx: usize, payload: u8) {
+        let random_number: u8 = rand::rng().random();
+
+        cpu.regs[Rx] = cpu.regs[Rx] & payload;
+    }
+
+    // DRW
+    fn DRW(
+        cpu: &mut CPU,
+        memory: &[u8; 4096],
+        display: &mut Display,
+        Rx: usize,
+        Ry: usize,
+        n: usize,
+    ) {
+        let sprite = &memory[cpu.index as usize..(cpu.index as usize + n)];
+
+        let collision = display.draw_sprite(cpu.regs[Rx], cpu.regs[Ry], sprite);
+
+        cpu.regs[Rx] = collision as u8;
     }
 }
