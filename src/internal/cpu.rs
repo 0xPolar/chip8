@@ -197,4 +197,9 @@ impl CPU {
             cpu.PC += 2;
         }
     }
+
+    // Load value of nnn into index register
+    fn LDI(cpu: &mut CPU, payload: u16) {
+        cpu.index = payload;
+    }
 }
