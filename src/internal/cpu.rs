@@ -234,4 +234,18 @@ impl CPU {
 
         cpu.regs[Rx] = collision as u8;
     }
+
+    // Skip next instruction if key with value of Vx is pressed.
+    fn SKP(cpu: &mut CPU, keypad: &Keypad, Rx: usize) {
+        if keypad.is_pressed(cpu.regs[Rx] as usize) {
+            cpu.PC += 2;
+        }
+    }
+
+    // Skip next instruction if key with value of Vx is not pressed.
+    fn SKNP(cpu: &mut CPU, keypad: &Keypad, Rx: usize) {
+        if !keypad.is_pressed(cpu.regs[Rx] as usize) {
+            cpu.PC += 2;
+        }
+    }
 }
