@@ -1,3 +1,5 @@
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 use std::fmt::Error;
 
 use rand::{Rng, RngExt};
@@ -30,9 +32,20 @@ impl CPU {
         }
     }
 
-    pub fn fetch(&self, memory: &[u8; 4096]) -> u16 {
+    pub fn decrement_timers(&mut self) {
+        if self.DT > 0 {
+            self.DT -= 1;
+        }
+        if self.ST > 0 {
+            self.ST -= 1;
+        }
+    }
+
+    pub fn fetch(&mut self, memory: &[u8; 4096]) -> u16 {
         let high_byte = memory[self.PC as usize];
         let low_byte = memory[self.PC as usize + 1];
+
+        self.PC += 2;
 
         return (high_byte as u16) << 8 | (low_byte as u16);
     }
@@ -57,14 +70,53 @@ impl CPU {
         let x = ((opcode & 0x0F00) >> 8) as usize;
         let y = ((opcode & 0x00F0) >> 4) as usize;
 
-        match (opcode & 0xF000) {
+        match opcode & 0xF000 {
             0x0000 => match opcode {
                 0x00E0 => CPU::CLS(display),
                 0x00EE => CPU::RET(self),
-
                 _ => return Err(format!("Unknown Opcode: {:#06x}", opcode)),
             },
-
+            0x1000 => CPU::JP(self, nnn),
+            0x2000 => CPU::CALL(self, nnn),
+            0x3000 => CPU::SEVx(self, x, nn),
+            0x4000 => CPU::SNEVx(self, x, nn),
+            0x5000 => CPU::SEVxVy(self, x, y),
+            0x6000 => CPU::LDVx(self, x, nn),
+            0x7000 => CPU::ADDVx(self, x, nn),
+            0x8000 => match opcode & 0x000F {
+                0x0 => CPU::LDVxVy(self, x, y),
+                0x1 => CPU::ORVxVy(self, x, y),
+                0x2 => CPU::ANDVxVy(self, x, y),
+                0x3 => CPU::XORVxVy(self, x, y),
+                0x4 => CPU::CRRYADD(self, x, y),
+                0x5 => CPU::BRWSUB(self, x, y),
+                0x6 => CPU::SHRVc(self, x),
+                0x7 => CPU::BRWSUB2(self, x, y),
+                0xE => CPU::SHLVc(self, x),
+                _ => return Err(format!("Unknown Opcode: {:#06x}", opcode)),
+            },
+            0x9000 => CPU::SNEVxVy(self, x, y),
+            0xA000 => CPU::LDI(self, nnn),
+            0xB000 => CPU::JPV0(self, nnn),
+            0xC000 => CPU::RNDVx(self, x, nn),
+            0xD000 => CPU::DRW(self, memory, display, x, y, n as usize),
+            0xE000 => match opcode & 0x00FF {
+                0x9E => CPU::SKP(self, keypad, x),
+                0xA1 => CPU::SKNP(self, keypad, x),
+                _ => return Err(format!("Unknown Opcode: {:#06x}", opcode)),
+            },
+            0xF000 => match opcode & 0x00FF {
+                0x07 => CPU::LDVxDT(self, x),
+                0x0A => CPU::LDVxK(self, keypad, x),
+                0x15 => CPU::LDDTVx(self, x),
+                0x18 => CPU::LDSTVx(self, x),
+                0x1E => CPU::ADDIVx(self, x),
+                0x29 => CPU::LDFVx(self, x),
+                0x33 => CPU::LDBVx(self, memory, x),
+                0x55 => CPU::LDIVx(self, memory, x),
+                0x65 => CPU::LDVxI(self, memory, x),
+                _ => return Err(format!("Unknown Opcode: {:#06x}", opcode)),
+            },
             _ => return Err(format!("Unknown Opcode: {:#06x}", opcode)),
         }
         Ok(())
@@ -225,7 +277,7 @@ impl CPU {
     fn RNDVx(cpu: &mut CPU, Rx: usize, payload: u8) {
         let random_number: u8 = rand::rng().random();
 
-        cpu.regs[Rx] = cpu.regs[Rx] & payload;
+        cpu.regs[Rx] = random_number & payload;
     }
 
     // DRW
@@ -884,7 +936,7 @@ mod tests {
     // -- fetch --
     #[test]
     fn fetch_reads_opcode() {
-        let cpu = new_cpu();
+        let mut cpu = new_cpu();
         let mut memory = [0u8; 4096];
         memory[0x200] = 0x12;
         memory[0x201] = 0x34;

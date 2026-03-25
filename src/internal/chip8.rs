@@ -1,6 +1,6 @@
 use crate::internal::{cpu::CPU, display::Display, font::FONT_DATA, keypad::Keypad};
 
-struct Chip8 {
+pub struct Chip8 {
     memory: [u8; 4096],
     cpu: CPU,
     display: Display,
@@ -8,7 +8,7 @@ struct Chip8 {
 }
 
 impl Chip8 {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let mut chip8 = Self {
             memory: [0x00; 4096],
             cpu: CPU::new(),
@@ -21,12 +21,7 @@ impl Chip8 {
         chip8
     }
 
-    fn load_rom(&mut self, rom_path: String) -> Result<String, String> {
-        let rom_bytes = match std::fs::read(rom_path) {
-            Ok(f) => f,
-            Err(e) => return Err(format!("Failed to read ROM: {}", e)),
-        };
-
+    pub fn load_rom(&mut self, rom_bytes: &[u8]) -> Result<String, String> {
         if rom_bytes.len() > (4096 - 0x050) {
             return Err("Rom Too Large!!!".to_string());
         };
@@ -34,6 +29,16 @@ impl Chip8 {
         self.memory[0x200..0x200 + rom_bytes.len()].copy_from_slice(&rom_bytes);
 
         Ok("Loaded Rom Into memory".to_string())
+    }
+
+    fn tick(&mut self) {
+        let opcode = self.cpu.fetch(&self.memory);
+        self.cpu
+            .execute(opcode, &mut self.memory, &mut self.display, &self.keypad);
+    }
+
+    fn tick_times(&mut self) {
+        self.cpu.decrement_timers();
     }
 }
 
