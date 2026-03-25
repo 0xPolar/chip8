@@ -5,11 +5,11 @@ use crate::internal::{display::Display, keypad::Keypad};
 pub struct CPU {
     regs: [u8; 16],
     index: u16,
-    program_counter: u16,
-    stack_pointer: u8,
+    PC: u16,
+    SP: u8,
     stack: [u16; 16],
-    delay_timer: u8,
-    sound_timer: u8,
+    DT: u8,
+    ST: u8,
 }
 
 impl CPU {
@@ -17,17 +17,17 @@ impl CPU {
         Self {
             regs: [0x00; 16],
             index: 0x00,
-            program_counter: 0x200,
-            stack_pointer: 0x00,
+            PC: 0x200, // Program Counter
+            SP: 0x00,  // Stack Pointer
             stack: [0x00; 16],
-            delay_timer: 0x00,
-            sound_timer: 0x00,
+            DT: 0x00, // Delay Timer
+            ST: 0x00, // Sound Timer
         }
     }
 
     pub fn fetch(&self, memory: &[u8; 4096]) -> u16 {
-        let high_byte = memory[self.program_counter as usize];
-        let low_byte = memory[self.program_counter as usize + 1];
+        let high_byte = memory[self.PC as usize];
+        let low_byte = memory[self.PC as usize + 1];
 
         return (high_byte as u16) << 8 | (low_byte as u16);
     }
@@ -66,105 +66,128 @@ impl CPU {
 
     // Return
     fn RET(cpu: &mut CPU) {
-        cpu.program_counter = cpu.stack[cpu.stack_pointer as usize];
-        cpu.stack_pointer -= 1;
+        cpu.PC = cpu.stack[cpu.SP as usize];
+        cpu.SP -= 1;
     }
 
     // Jump addr
     fn JP(cpu: &mut CPU, addr: u16) {
-        cpu.program_counter = addr;
+        cpu.PC = addr;
     }
 
     // Call addr
     fn CALL(cpu: &mut CPU, addr: u16) {
-        cpu.stack_pointer += 1;
-        cpu.stack[cpu.stack_pointer as usize] = cpu.program_counter;
+        cpu.SP += 1;
+        cpu.stack[cpu.SP as usize] = cpu.PC;
 
-        cpu.program_counter = addr;
+        cpu.PC = addr;
     }
 
     // Skip next instruction if Vx = kk.
-    fn SEVx(cpu: &mut CPU, rX: usize, payload: u8) {
-        if cpu.regs[rX] == payload {
-            cpu.program_counter += 2;
+    fn SEVx(cpu: &mut CPU, Rx: usize, payload: u8) {
+        if cpu.regs[Rx] == payload {
+            cpu.PC += 2;
         }
     }
 
     // Skip next instruction if Vx != kk.
-    fn SNEVx(cpu: &mut CPU, rX: usize, payload: u8) {
-        if !(cpu.regs[rX] != payload) {
-            cpu.program_counter += 2;
+    fn SNEVx(cpu: &mut CPU, Rx: usize, payload: u8) {
+        if !(cpu.regs[Rx] != payload) {
+            cpu.PC += 2;
         }
     }
 
     // Skip next instruction if Vx = Vy
-    fn SEVxVy(cpu: &mut CPU, rX: usize, rY: usize) {
-        if cpu.regs[rX] == cpu.regs[rY] {
-            cpu.program_counter += 2;
+    fn SEVxVy(cpu: &mut CPU, Rx: usize, Ry: usize) {
+        if cpu.regs[Rx] == cpu.regs[Ry] {
+            cpu.PC += 2;
         }
     }
 
     // Set Vx to KK
-    fn LDVx(cpu: &mut CPU, rX: usize, payload: u8) {
-        cpu.regs[rX] = payload;
+    fn LDVx(cpu: &mut CPU, Rx: usize, payload: u8) {
+        cpu.regs[Rx] = payload;
     }
 
     // Add kk to Vx and store in Vx
-    fn ADDVx(cpu: &mut CPU, rX: usize, payload: u8) {
-        cpu.regs[rX] += payload;
+    fn ADDVx(cpu: &mut CPU, Rx: usize, payload: u8) {
+        cpu.regs[Rx] += payload;
     }
 
-    // Store the value of rX Vy in Vx
-    fn LDVxVy(cpu: &mut CPU, rX: usize, rY: usize) {
-        cpu.regs[rX] = cpu.regs[rY]
+    // Store the value of Rx Vy in Vx
+    fn LDVxVy(cpu: &mut CPU, Rx: usize, Ry: usize) {
+        cpu.regs[Rx] = cpu.regs[Ry]
     }
 
     // Set Vx to Vx bitwise or'ed Vy
-    fn ORVxVy(cpu: &mut CPU, rX: usize, rY: usize) {
-        cpu.regs[rX] = cpu.regs[rX] | cpu.regs[rY];
+    fn ORVxVy(cpu: &mut CPU, Rx: usize, Ry: usize) {
+        cpu.regs[Rx] = cpu.regs[Rx] | cpu.regs[Ry];
     }
 
     // Set Vx to Vx btwise and'ed Vy
-    fn ANDVxVy(cpu: &mut CPU, rX: usize, rY: usize) {
-        cpu.regs[rX] = cpu.regs[rX] & cpu.regs[rY];
+    fn ANDVxVy(cpu: &mut CPU, Rx: usize, Ry: usize) {
+        cpu.regs[Rx] = cpu.regs[Rx] & cpu.regs[Ry];
     }
 
     // Set Vx to Vx bitwise xor'ed Vy
-    fn XORVxVy(cpu: &mut CPU, rX: usize, rY: usize) {
-        cpu.regs[rX] = cpu.regs[rX] ^ cpu.regs[rY];
+    fn XORVxVy(cpu: &mut CPU, Rx: usize, Ry: usize) {
+        cpu.regs[Rx] = cpu.regs[Rx] ^ cpu.regs[Ry];
     }
 
     // Set Vx to Vx + Vy, Vf to carry
-    fn CRRYADD(cpu: &mut CPU, rX: usize, rY: usize) {
-        let sum: u16 = cpu.regs[rX] as u16 + cpu.regs[rY] as u16;
+    fn CRRYADD(cpu: &mut CPU, Rx: usize, Ry: usize) {
+        let sum: u16 = cpu.regs[Rx] as u16 + cpu.regs[Ry] as u16;
 
         if sum > 255 {
             cpu.regs[0xF] = 1;
         }
 
-        cpu.regs[rX] = sum as u8;
+        cpu.regs[Rx] = sum as u8;
     }
 
     // If Vx > Vy, then VF is set to 1, otherwise 0.
     // Then Vy is subtracted from Vx, and the results stored in Vx.
-    fn BRWSUB(cpu: &mut CPU, rX: usize, rY: usize) {
-        if cpu.regs[rX] > cpu.regs[rY] {
+    fn BRWSUB(cpu: &mut CPU, Rx: usize, Ry: usize) {
+        if cpu.regs[Rx] > cpu.regs[Ry] {
             cpu.regs[0xF] = 1;
         } else {
             cpu.regs[0xF] = 0;
         }
 
-        cpu.regs[rX] = cpu.regs[rX] - cpu.regs[rY];
+        cpu.regs[Rx] = cpu.regs[Rx] - cpu.regs[Ry];
     }
 
     // Set Vx = Vx SHR 1.
-    fn SHRVc(cpu: &mut CPU, rX: usize) {
-        if (cpu.regs[rX] & 0x000F) == 0x01 {
+    fn SHRVc(cpu: &mut CPU, Rx: usize) {
+        if (cpu.regs[Rx] & 0x000F) == 0x01 {
             cpu.regs[0xF] = 1;
         } else {
             cpu.regs[0xF] = 0;
         }
 
-        cpu.regs[rX] /= 2;
+        cpu.regs[Rx] /= 2;
+    }
+
+    // If Vy > Vx, then VF is set to 1, otherwise 0.
+    // Then Vy is subtracted from Vx, and the results stored in Vx.
+    fn BRWSUB2(cpu: &mut CPU, Rx: usize, Ry: usize) {
+        if cpu.regs[Ry] > cpu.regs[Rx] {
+            cpu.regs[0xF] = 1;
+        } else {
+            cpu.regs[0xF] = 0;
+        }
+
+        cpu.regs[Rx] = cpu.regs[Ry] - cpu.regs[Rx];
+    }
+
+    // Set Vx = Vx SHL 1.
+    fn SHLVc(cpu: &mut CPU, Rx: usize) {
+        if (cpu.regs[Rx] & 0xF0) == 0x10 {
+            cpu.regs[0xF] = 1;
+        } else {
+            cpu.regs[0xF] = 0;
+        }
+
+        cpu.regs[Rx] *= 2;
     }
 }
