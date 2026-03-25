@@ -12,6 +12,8 @@ pub struct CPU {
     stack: [u16; 16],
     DT: u8,
     ST: u8,
+
+    waiting: Option<usize>,
 }
 
 impl CPU {
@@ -24,6 +26,7 @@ impl CPU {
             stack: [0x00; 16],
             DT: 0x00, // Delay Timer
             ST: 0x00, // Sound Timer
+            waiting: None,
         }
     }
 
@@ -247,5 +250,26 @@ impl CPU {
         if !keypad.is_pressed(cpu.regs[Rx] as usize) {
             cpu.PC += 2;
         }
+    }
+
+    // Set Vx = delay timer value.
+    fn LDVxDT(cpu: &mut CPU, Rx: usize) {
+        cpu.regs[Rx] = cpu.DT;
+    }
+
+    // TODO: Fix Implementation
+    // Wait for a key press, store the value of the key in Vx.
+    fn LDVxK(cpu: &mut CPU, keypad: &Keypad, Rx: usize) {
+        cpu.waiting = Some(Rx);
+    }
+
+    // Set delay timer = Vx.
+    fn LDDTVx(cpu: &mut CPU, Rx: usize) {
+        cpu.DT = cpu.regs[Rx];
+    }
+
+    // Set sound timer = Vx.
+    fn LDSTVx(cpu: &mut CPU, Rx: usize) {
+        cpu.ST = cpu.regs[Rx];
     }
 }
