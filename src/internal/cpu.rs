@@ -44,11 +44,17 @@ impl CPU {
         display: &mut Display,
         keypad: &Keypad,
     ) -> Result<(), String> {
+        // If waiting for a key press, check the keypad and don't execute anything else
+        if let Some(rx) = self.waiting {
+            CPU::LDVxK(self, keypad, rx);
+            return Ok(());
+        }
+
         let nnn = opcode & 0x0FFF;
         let nn = (opcode & 0x00FF) as u8;
         let n = (opcode & 0x000F) as u8;
 
-        let x = ((opcode * 0x0F00) >> 8) as usize;
+        let x = ((opcode & 0x0F00) >> 8) as usize;
         let y = ((opcode & 0x00F0) >> 4) as usize;
 
         match (opcode & 0xF000) {
@@ -257,9 +263,16 @@ impl CPU {
         cpu.regs[Rx] = cpu.DT;
     }
 
-    // TODO: Fix Implementation
     // Wait for a key press, store the value of the key in Vx.
+    // All execution stops until a key is pressed.
     fn LDVxK(cpu: &mut CPU, keypad: &Keypad, Rx: usize) {
+        for i in 0..16 {
+            if keypad.is_pressed(i) {
+                cpu.regs[Rx] = i as u8;
+                cpu.waiting = None;
+                return;
+            }
+        }
         cpu.waiting = Some(Rx);
     }
 
@@ -271,5 +284,38 @@ impl CPU {
     // Set sound timer = Vx.
     fn LDSTVx(cpu: &mut CPU, Rx: usize) {
         cpu.ST = cpu.regs[Rx];
+    }
+
+    // Set I = I + Vx.
+    fn ADDIVx(cpu: &mut CPU, Rx: usize) {
+        cpu.index += cpu.regs[Rx] as u16;
+    }
+
+    // Set I = location of sprite for digit Vx.
+    // Font data starts at 0x050, each character is 5 bytes.
+    fn LDFVx(cpu: &mut CPU, Rx: usize) {
+        cpu.index = 0x050 + (cpu.regs[Rx] as u16 * 5);
+    }
+
+    // Store BCD representation of Vx in memory locations I, I+1, and I+2.
+    fn LDBVx(cpu: &CPU, memory: &mut [u8; 4096], Rx: usize) {
+        let value = cpu.regs[Rx];
+        memory[cpu.index as usize] = value / 100;
+        memory[cpu.index as usize + 1] = (value / 10) % 10;
+        memory[cpu.index as usize + 2] = value % 10;
+    }
+
+    // Store registers V0 through Vx in memory starting at location I.
+    fn LDIVx(cpu: &CPU, memory: &mut [u8; 4096], Rx: usize) {
+        for i in 0..=Rx {
+            memory[cpu.index as usize + i] = cpu.regs[i];
+        }
+    }
+
+    // Read registers V0 through Vx from memory starting at location I.
+    fn LDVxI(cpu: &mut CPU, memory: &[u8; 4096], Rx: usize) {
+        for i in 0..=Rx {
+            cpu.regs[i] = memory[cpu.index as usize + i];
+        }
     }
 }
