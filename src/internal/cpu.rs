@@ -202,4 +202,11 @@ impl CPU {
     fn LDI(cpu: &mut CPU, payload: u16) {
         cpu.index = payload;
     }
+
+    // Jump to location nnn + V0
+    fn JPV0(cpu: &mut CPU, payload: u16) {
+        let addr = cpu.regs[0] as u16 + payload;
+
+        cpu.PC = addr;
+    }
 }
