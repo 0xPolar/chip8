@@ -190,4 +190,11 @@ impl CPU {
 
         cpu.regs[Rx] *= 2;
     }
+
+    // Skip next instruction if Vx != Vy
+    fn SNEVxVy(cpu: &mut CPU, Rx: usize, Ry: usize) {
+        if (cpu.regs[Rx] != cpu.regs[Ry]) {
+            cpu.PC += 2;
+        }
+    }
 }
