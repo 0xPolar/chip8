@@ -230,7 +230,7 @@ impl CPU {
     ) {
         let sprite = &memory[cpu.index as usize..(cpu.index as usize + n)];
 
-        let collision = display.draw_sprite(cpu.regs[Rx], cpu.regs[Ry], sprite);
+        let collision = display.draw_sprite(cpu.regs[Rx] as usize, cpu.regs[Ry] as usize, sprite);
 
         cpu.regs[Rx] = collision as u8;
     }
