@@ -4,13 +4,13 @@ use raylib::prelude::*;
 
 const SCALE: i32 = 10;
 
-struct GraphicsWindow {
+pub struct GraphicsWindow {
     rl: RaylibHandle,
     thread: RaylibThread,
 }
 
 impl GraphicsWindow {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let (mut rl, thread) = raylib::init()
             .size(DISPLAY_WIDTH as i32 * SCALE, DISPLAY_HEIGHT as i32 * SCALE)
             .title("CHIP-8")
@@ -47,7 +47,7 @@ impl GraphicsWindow {
         }
     }
 
-    fn update_keypad(&self, keypad: &mut Keypad) {
+    pub fn update_keypad(&self, keypad: &mut Keypad) {
         const KEY_MAP: [(KeyboardKey, usize); 16] = [
             (KeyboardKey::KEY_X, 0x0),
             (KeyboardKey::KEY_ONE, 0x1),
@@ -74,5 +74,9 @@ impl GraphicsWindow {
                 keypad.release(idx);
             }
         }
+    }
+
+    pub fn get_frame_time(&self) -> f32 {
+        self.rl.get_frame_time()
     }
 }

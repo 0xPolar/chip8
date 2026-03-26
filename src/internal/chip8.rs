@@ -3,8 +3,8 @@ use crate::internal::{cpu::CPU, display::Display, font::FONT_DATA, keypad::Keypa
 pub struct Chip8 {
     memory: [u8; 4096],
     cpu: CPU,
-    display: Display,
-    keypad: Keypad,
+    pub display: Display,
+    pub keypad: Keypad,
 }
 
 impl Chip8 {
@@ -31,13 +31,13 @@ impl Chip8 {
         Ok("Loaded Rom Into memory".to_string())
     }
 
-    fn tick(&mut self) {
+    pub fn tick(&mut self) {
         let opcode = self.cpu.fetch(&self.memory);
         self.cpu
             .execute(opcode, &mut self.memory, &mut self.display, &self.keypad);
     }
 
-    fn tick_times(&mut self) {
+    pub fn tick_times(&mut self) {
         self.cpu.decrement_timers();
     }
 }

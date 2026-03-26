@@ -201,11 +201,8 @@ impl CPU {
     fn CRRYADD(cpu: &mut CPU, Rx: usize, Ry: usize) {
         let sum: u16 = cpu.regs[Rx] as u16 + cpu.regs[Ry] as u16;
 
-        if sum > 255 {
-            cpu.regs[0xF] = 1;
-        }
-
         cpu.regs[Rx] = sum as u8;
+        cpu.regs[0xF] = if sum > 255 { 1 } else { 0 };
     }
 
     // If Vx > Vy, then VF is set to 1, otherwise 0.
@@ -293,7 +290,7 @@ impl CPU {
 
         let collision = display.draw_sprite(cpu.regs[Rx] as usize, cpu.regs[Ry] as usize, sprite);
 
-        cpu.regs[Rx] = collision as u8;
+        cpu.regs[0xF] = collision as u8;
     }
 
     // Skip next instruction if key with value of Vx is pressed.
