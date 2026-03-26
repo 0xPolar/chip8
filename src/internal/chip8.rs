@@ -44,6 +44,41 @@ impl Chip8 {
     pub fn sound_active(&self) -> bool {
         self.cpu.sound_timer() > 0
     }
+    pub fn registers(&self) -> &[u8; 16] {
+        self.cpu.registers()
+    }
+
+    pub fn index_register(&self) -> u16 {
+        self.cpu.index()
+    }
+
+    pub fn program_counter(&self) -> u16 {
+        self.cpu.program_counter()
+    }
+
+    pub fn stack_pointer(&self) -> u8 {
+        self.cpu.stack_pointer()
+    }
+
+    pub fn stack(&self) -> &[u16; 16] {
+        self.cpu.stack()
+    }
+
+    pub fn delay_timer(&self) -> u8 {
+        self.cpu.delay_timer()
+    }
+
+    pub fn sound_timer(&self) -> u8 {
+        self.cpu.sound_timer()
+    }
+
+    pub fn memory(&self) -> &[u8; 4096] {
+        &self.memory
+    }
+
+    pub fn waiting(&self) -> bool {
+        self.cpu.waiting()
+    }
 }
 
 #[cfg(test)]

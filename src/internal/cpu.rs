@@ -41,12 +41,8 @@ impl CPU {
         }
     }
 
-    pub fn sound_timer(&self) -> u8 {
-        self.ST
-    }
-
-    pub fn registers(&self) -> [u8; 16] {
-        self.regs
+    pub fn registers(&self) -> &[u8; 16] {
+        &self.regs
     }
 
     pub fn index(&self) -> u16 {
@@ -61,8 +57,8 @@ impl CPU {
         self.SP
     }
 
-    pub fn stack(&self) -> [u16; 16] {
-        self.stack
+    pub fn stack(&self) -> &[u16; 16] {
+        &self.stack
     }
 
     pub fn delay_timer(&self) -> u8 {
@@ -71,6 +67,10 @@ impl CPU {
 
     pub fn sound_timer(&self) -> u8 {
         self.ST
+    }
+
+    pub fn waiting(&self) -> bool {
+        self.waiting.is_some()
     }
 
     pub fn fetch(&mut self, memory: &[u8; 4096]) -> u16 {
