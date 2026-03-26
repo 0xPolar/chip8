@@ -385,6 +385,17 @@ mod tests {
         Keypad::new()
     }
 
+    #[test]
+    fn initial_cpu_state() {
+        let cpu = new_cpu();
+        assert_eq!(cpu.PC, 0x200);
+        assert_eq!(cpu.regs, [0u8; 16]);
+        assert_eq!(cpu.index, 0);
+        assert_eq!(cpu.SP, 0);
+        assert_eq!(cpu.DT, 0);
+        assert_eq!(cpu.ST, 0);
+    }
+
     // -- CLS (00E0) --
     #[test]
     fn cls_clears_display() {
@@ -725,7 +736,7 @@ mod tests {
         CPU::DRW(&mut cpu, &memory, &mut display, 0, 1, 1);
         // Draw again at same spot — collision
         CPU::DRW(&mut cpu, &memory, &mut display, 0, 1, 1);
-        assert_eq!(cpu.regs[0], 1); // VF set to collision flag via Rx
+        assert_eq!(cpu.regs[0xF], 1); // VF set to collision flag
     }
 
     // -- SKP Vx (Ex9E) --

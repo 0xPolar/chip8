@@ -47,23 +47,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn initial_memory_state() {
-        let chip8 = Chip8::new();
-
-        assert_eq!(chip8.memory, [0x00; 4096])
-    }
-
-    #[test]
     fn font_loaded_in_memory() {
         let chip8 = Chip8::new();
-
-        assert_eq!(chip8.memory[0x050..0x050 + FONT_DATA.len()], FONT_DATA)
+        assert_eq!(&chip8.memory[0x050..0x050 + 80], &FONT_DATA);
     }
 
     #[test]
     fn rom_loading() {
         let mut chip8 = Chip8::new();
+        chip8.load_rom(&[0x12, 0x34, 0x56]);
+        assert_eq!(chip8.memory[0x200], 0x12);
+        assert_eq!(chip8.memory[0x201], 0x34);
+        assert_eq!(chip8.memory[0x202], 0x56);
+    }
 
-        chip8.load_rom("test.ch8".to_string()).unwrap();
+    #[test]
+    fn rom_preserves_font() {
+        let mut chip8 = Chip8::new();
+        chip8.load_rom(&[0xFF; 100]);
+        assert_eq!(&chip8.memory[0x050..0x050 + 80], &FONT_DATA);
     }
 }
