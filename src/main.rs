@@ -1,3 +1,4 @@
+mod debugger;
 mod internal;
 
 use internal::chip8::Chip8;
