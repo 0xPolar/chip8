@@ -40,6 +40,10 @@ impl Chip8 {
     pub fn tick_times(&mut self) {
         self.cpu.decrement_timers();
     }
+
+    pub fn sound_active(&self) -> bool {
+        self.cpu.sound_timer() > 0
+    }
 }
 
 #[cfg(test)]

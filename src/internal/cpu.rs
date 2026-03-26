@@ -41,6 +41,10 @@ impl CPU {
         }
     }
 
+    pub fn sound_timer(&self) -> u8 {
+        self.ST
+    }
+
     pub fn fetch(&mut self, memory: &[u8; 4096]) -> u16 {
         let high_byte = memory[self.PC as usize];
         let low_byte = memory[self.PC as usize + 1];

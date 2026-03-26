@@ -3,6 +3,8 @@ mod internal;
 use internal::chip8::Chip8;
 use internal::graphics::GraphicsWindow;
 
+use crate::internal::audio::AudioSystem;
+
 fn read_rom(rom_path: String) -> Result<Vec<u8>, String> {
     std::fs::read(rom_path).map_err(|err| format!("Failed to Read ROM: {}", err))
 }
@@ -20,6 +22,8 @@ fn main() {
 
     let mut window = GraphicsWindow::new();
 
+    let mut audio = AudioSystem::new();
+
     while !window.should_close() {
         let dt = window.get_frame_time();
 
@@ -34,6 +38,8 @@ fn main() {
         for _ in 0..timer_ticks {
             c8.tick_times();
         }
+
+        audio.update(c8.sound_active());
 
         window.draw(&c8.display);
     }
