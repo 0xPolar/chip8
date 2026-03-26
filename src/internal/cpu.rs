@@ -45,6 +45,34 @@ impl CPU {
         self.ST
     }
 
+    pub fn registers(&self) -> [u8; 16] {
+        self.regs
+    }
+
+    pub fn index(&self) -> u16 {
+        self.index
+    }
+
+    pub fn program_counter(&self) -> u16 {
+        self.PC
+    }
+
+    pub fn stack_pointer(&self) -> u8 {
+        self.SP
+    }
+
+    pub fn stack(&self) -> [u16; 16] {
+        self.stack
+    }
+
+    pub fn delay_timer(&self) -> u8 {
+        self.DT
+    }
+
+    pub fn sound_timer(&self) -> u8 {
+        self.ST
+    }
+
     pub fn fetch(&mut self, memory: &[u8; 4096]) -> u16 {
         let high_byte = memory[self.PC as usize];
         let low_byte = memory[self.PC as usize + 1];
