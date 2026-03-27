@@ -77,3 +77,40 @@ pub fn disassemble_reigon(memory: &[u8], start: u16, count: usize) -> Vec<(u16, 
 
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cls() {
+        assert_eq!(disassemble(0x00E0), "CLS");
+    }
+
+    #[test]
+    fn test_jp() {
+        assert_eq!(disassemble(0x1234), "JP   0x234");
+    }
+
+    #[test]
+    fn test_ld_vx_kk() {
+        assert_eq!(disassemble(0x6A42), "LD   VA, 0x42");
+    }
+
+    #[test]
+    fn test_drw() {
+        assert_eq!(disassemble(0xD015), "DRW  V0, V1, 5");
+    }
+
+    #[test]
+    fn test_disassemble_region() {
+        let mut mem = [0u8; 4096];
+        mem[0x200] = 0x00;
+        mem[0x201] = 0xE0; // CLS
+        mem[0x202] = 0x62;
+        mem[0x203] = 0x0A; // LD V2, 0x0A
+        let result = disassemble_reigon(&mem, 0x200, 2);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], (0x200, 0x00E0, "CLS".to_string()));
+    }
+}
