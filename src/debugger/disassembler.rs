@@ -1,4 +1,4 @@
-pub fn disaassemble(opcode: u16) -> String {
+pub fn disassemble(opcode: u16) -> String {
     let nnn = opcode & 0x0FFF;
     let nn = (opcode & 0x00FF) as u8;
     let n = (opcode & 0x000F) as u8;
@@ -55,4 +55,25 @@ pub fn disaassemble(opcode: u16) -> String {
         },
         _ => format!("???  {:#06X}", opcode),
     }
+}
+
+pub fn disassemble_reigon(memory: &[u8], start: u16, count: usize) -> Vec<(u16, u16, String)> {
+    let mut result = Vec::new();
+    let mut address = start;
+
+    for i in 0..count {
+        let idx = address as usize;
+
+        if idx + 1 >= memory.len() {
+            break;
+        }
+
+        let opcode = (memory[idx] as u16) << 8 | (memory[idx + 1] as u16);
+        let intruction = disassemble(opcode);
+
+        result.push((address, opcode, intruction));
+        address += 2;
+    }
+
+    result
 }
