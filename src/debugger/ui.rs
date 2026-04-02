@@ -185,4 +185,26 @@ impl DebuggerApp {
                 }
             });
     }
+
+    fn draw_memory(&self, ui: &mut egui::Ui, snapshot: &EmulatorSnapshot) {
+        egui::ScrollArea::vertical()
+            .auto_shrink(false)
+            .show(ui, |ui| {
+                for row_start in (0..4096).step_by(16) {
+                    let mut hex_str = format!("{:#06X}: ", row_start);
+
+                    for col in 0..16 {
+                        let addr = row_start + col;
+                        if addr < snapshot.memory.len() {
+                            hex_str.push_str(&format!("{:02X} ", snapshot.memory[addr]));
+                        }
+                        if col == 7 {
+                            hex_str.push(' ');
+                        }
+                    }
+
+                    ui.monospace(&hex_str);
+                }
+            });
+    }
 }
