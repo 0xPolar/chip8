@@ -93,4 +93,24 @@ impl DebuggerApp {
             "Status: RUNNING"
         });
     }
+    fn draw_registers(&self, ui: &mut egui::Ui, snapshot: &EmulatorSnapshot) {
+        ui.heading("Registers");
+
+        egui::Grid::new("registers_grid")
+            .num_columns(4)
+            .spacing([10.0, 4.0])
+            .show(ui, |ui| {
+                for i in 0..16 {
+                    ui.monospace(format!("V{:X}: {:#04X}", i, snapshot.registers[i]));
+                    if (i + 1) % 4 == 0 {
+                        ui.end_row();
+                    }
+                }
+            });
+
+        ui.add_space(4.0);
+        ui.monospace(format!("I:  {:#06X}", snapshot.index));
+        ui.monospace(format!("PC: {:#06X}", snapshot.pc));
+        ui.monospace(format!("SP: {:#04X}", snapshot.sp));
+    }
 }

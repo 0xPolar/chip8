@@ -6,7 +6,7 @@ use crate::internal::chip8::Chip8;
 #[derive(Clone)]
 pub struct EmulatorSnapshot {
     regs: [u8; 16],
-    index: u16,
+    pub index: u16,
     PC: u16,
     SP: u8,
     stack: [u16; 16],
