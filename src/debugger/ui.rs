@@ -133,4 +133,56 @@ impl DebuggerApp {
         ));
         ui.monospace(format!("        {}", mnemonic));
     }
+
+    fn draw_disassembly(
+        &self,
+        ui: &mut egui::Ui,
+        snapshot: &EmulatorSnapshot,
+        breakpoints: &std::collections::HashSet<u16>,
+    ) {
+        // Show ~30 instructions centered around PC
+        let start_addr = if snapshot.pc >= 20 {
+            (snapshot.pc - 20) & 0xFFFE // align to even address
+        } else {
+            0x200
+        };
+
+        let instructions = disassembler::disassemble_region(&snapshot.memory, start_addr, 30);
+
+        egui::ScrollArea::vertical()
+            .auto_shrink(false)
+            .show(ui, |ui| {
+                for (addr, opcode, mnemonic) in &instructions {
+                    let is_current = *addr == snapshot.pc;
+                    let is_breakpoint = breakpoints.contains(addr);
+
+                    let text = format!(
+                        "{} {:#06X}: {:#06X}  {}",
+                        if is_breakpoint { "(*)" } else { "   " },
+                        addr,
+                        opcode,
+                        mnemonic
+                    );
+
+                    let label = if is_current {
+                        egui::RichText::new(&text)
+                            .monospace()
+                            .background_color(egui::Color32::from_rgb(60, 60, 120))
+                            .color(egui::Color32::WHITE)
+                    } else if is_breakpoint {
+                        egui::RichText::new(&text)
+                            .monospace()
+                            .color(egui::Color32::RED)
+                    } else {
+                        egui::RichText::new(&text).monospace()
+                    };
+
+                    // Click any instruction row to toggle a breakpoint
+                    if ui.add(egui::Label::new(label).sense(egui::Sense::click())).clicked() {
+                        let mut state = self.state.lock().unwrap();
+                        state.toggle_breakpoint(*addr);
+                    }
+                }
+            });
+    }
 }
