@@ -113,4 +113,24 @@ impl DebuggerApp {
         ui.monospace(format!("PC: {:#06X}", snapshot.pc));
         ui.monospace(format!("SP: {:#04X}", snapshot.sp));
     }
+
+    fn draw_timers(&self, ui: &mut egui::Ui, snapshot: &EmulatorSnapshot) {
+        ui.heading("Timers");
+        ui.monospace(format!("Delay: {:#04X} ({})", snapshot.dt, snapshot.dt));
+        ui.monospace(format!("Sound: {:#04X} ({})", snapshot.st, snapshot.st));
+
+        if snapshot.is_waiting {
+            ui.colored_label(egui::Color32::YELLOW, "Waiting for key press...");
+        }
+    }
+
+    fn draw_current_instruction(&self, ui: &mut egui::Ui, snapshot: &EmulatorSnapshot) {
+        ui.heading("Current Instruction");
+        let mnemonic = disassembler::disassemble(snapshot.current_opcode);
+        ui.monospace(format!(
+            "{:#06X}: {:#06X}",
+            snapshot.pc, snapshot.current_opcode
+        ));
+        ui.monospace(format!("        {}", mnemonic));
+    }
 }

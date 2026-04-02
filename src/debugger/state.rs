@@ -5,17 +5,17 @@ use crate::internal::chip8::Chip8;
 #[allow(non_snake_case)]
 #[derive(Clone)]
 pub struct EmulatorSnapshot {
-    regs: [u8; 16],
+    pub regs: [u8; 16],
     pub index: u16,
-    PC: u16,
-    SP: u8,
-    stack: [u16; 16],
-    DT: u8,
-    ST: u8,
+    pub PC: u16,
+    pub SP: u8,
+    pub stack: [u16; 16],
+    pub DT: u8,
+    pub ST: u8,
 
-    waiting: bool,
-    memory: Vec<u8>,
-    current_opcode: u16,
+    pub waiting: bool,
+    pub memory: Vec<u8>,
+    pub current_opcode: u16,
 }
 
 impl Default for EmulatorSnapshot {
