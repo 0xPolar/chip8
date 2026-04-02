@@ -207,4 +207,18 @@ impl DebuggerApp {
                 }
             });
     }
+
+    fn draw_stack(&self, ui: &mut egui::Ui, snapshot: &EmulatorSnapshot) {
+        ui.heading("Stack");
+
+        if snapshot.sp == 0 {
+            ui.label("(empty)");
+            return;
+        }
+
+        for i in (0..snapshot.sp as usize).rev() {
+            let marker = if i == (snapshot.sp as usize) - 1 { ">" } else { " " };
+            ui.monospace(format!("{} [{:2}] {:#06X}", marker, i, snapshot.stack[i]));
+        }
+    }
 }
