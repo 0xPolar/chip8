@@ -44,7 +44,7 @@ pub struct DebugState {
 }
 
 impl DebugState {
-    fn new() -> Self {
+    pub fn new() -> Self {
         DebugState {
             snapshot: EmulatorSnapshot::default(),
             paused: false,

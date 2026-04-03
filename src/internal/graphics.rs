@@ -1,82 +1,53 @@
-use super::display::{DISPLAY_HEIGHT, DISPLAY_WIDTH, Display};
+use sdl2::event::Event;
+use sdl2::keyboard::Scancode;
+use sdl2::video::GLProfile;
+
 use super::keypad::Keypad;
-use raylib::prelude::*;
 
-const SCALE: i32 = 10;
-
-pub struct GraphicsWindow {
-    rl: RaylibHandle,
-    thread: RaylibThread,
+pub struct AppWindow {
+    sdl: sdl2::Sdl,
+    window: sdl2::video::Window,
+    _gl_context: sdl2::video::GLContext,
+    event_pump: sdl2::EventPump,
 }
 
-impl GraphicsWindow {
+impl AppWindow {
     pub fn new() -> Self {
-        let (mut rl, thread) = raylib::init()
-            .size(DISPLAY_WIDTH as i32 * SCALE, DISPLAY_HEIGHT as i32 * SCALE)
-            .title("CHIP-8")
-            .build();
+        //Initalize SDL2 video module
+        let sdl = sdl2::init().expect("Failed to init SDL2");
+        let video = sdl.video().expect("Failed to init SDL2 Video");
 
-        rl.set_target_fps(60);
+        // Configure OpenGL version
+        let gl_attr = video.gl_attr();
+        gl_attr.set_context_profile(GLProfile::Core);
+        gl_attr.set_context_version(3, 3);
 
-        GraphicsWindow {
-            rl: rl,
-            thread: thread,
+        // Create Window
+        let window = video
+            .window("CHIP8", 1100, 700)
+            .opengl()
+            .resizable()
+            .position_centered()
+            .build()
+            .expect("Failed to create window");
+
+        // Create OpenGL context
+        let gl_context = window
+            .gl_create_context()
+            .expect("Failed to create OpenGL context");
+
+        // Enable VSync
+        video
+            .gl_set_swap_interval(sdl2::video::SwapInterval::VSync)
+            .expect("Failed to set VSync");
+
+        let event_pump = sdl.event_pump().expect("Failed to create event pump");
+
+        AppWindow {
+            sdl,
+            window,
+            _gl_context: gl_context,
+            event_pump,
         }
-    }
-
-    pub fn should_close(&self) -> bool {
-        self.rl.window_should_close()
-    }
-
-    pub fn draw(&mut self, display: &Display) {
-        let mut d = self.rl.begin_drawing(&self.thread);
-        d.clear_background(Color::BLACK);
-
-        for y in 0..DISPLAY_HEIGHT {
-            for x in 0..DISPLAY_WIDTH {
-                if display.get_pixel(x, y) {
-                    d.draw_rectangle(
-                        x as i32 * SCALE,
-                        y as i32 * SCALE,
-                        SCALE,
-                        SCALE,
-                        Color::WHITE,
-                    );
-                }
-            }
-        }
-    }
-
-    pub fn update_keypad(&self, keypad: &mut Keypad) {
-        const KEY_MAP: [(KeyboardKey, usize); 16] = [
-            (KeyboardKey::KEY_X, 0x0),
-            (KeyboardKey::KEY_ONE, 0x1),
-            (KeyboardKey::KEY_TWO, 0x2),
-            (KeyboardKey::KEY_THREE, 0x3),
-            (KeyboardKey::KEY_Q, 0x4),
-            (KeyboardKey::KEY_W, 0x5),
-            (KeyboardKey::KEY_E, 0x6),
-            (KeyboardKey::KEY_A, 0x7),
-            (KeyboardKey::KEY_S, 0x8),
-            (KeyboardKey::KEY_D, 0x9),
-            (KeyboardKey::KEY_Z, 0xA),
-            (KeyboardKey::KEY_C, 0xB),
-            (KeyboardKey::KEY_FOUR, 0xC),
-            (KeyboardKey::KEY_R, 0xD),
-            (KeyboardKey::KEY_F, 0xE),
-            (KeyboardKey::KEY_V, 0xF),
-        ];
-
-        for (key, idx) in KEY_MAP {
-            if self.rl.is_key_down(key) {
-                keypad.press(idx);
-            } else {
-                keypad.release(idx);
-            }
-        }
-    }
-
-    pub fn get_frame_time(&self) -> f32 {
-        self.rl.get_frame_time()
     }
 }

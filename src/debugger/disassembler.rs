@@ -57,7 +57,7 @@ pub fn disassemble(opcode: u16) -> String {
     }
 }
 
-pub fn disassemble_reigon(memory: &[u8], start: u16, count: usize) -> Vec<(u16, u16, String)> {
+pub fn disassemble_region(memory: &[u8], start: u16, count: usize) -> Vec<(u16, u16, String)> {
     let mut result = Vec::new();
     let mut address = start;
 
@@ -69,9 +69,9 @@ pub fn disassemble_reigon(memory: &[u8], start: u16, count: usize) -> Vec<(u16, 
         }
 
         let opcode = (memory[idx] as u16) << 8 | (memory[idx + 1] as u16);
-        let intruction = disassemble(opcode);
+        let instruction = disassemble(opcode);
 
-        result.push((address, opcode, intruction));
+        result.push((address, opcode, instruction));
         address += 2;
     }
 
@@ -109,7 +109,7 @@ mod tests {
         mem[0x201] = 0xE0; // CLS
         mem[0x202] = 0x62;
         mem[0x203] = 0x0A; // LD V2, 0x0A
-        let result = disassemble_reigon(&mem, 0x200, 2);
+        let result = disassemble_region(&mem, 0x200, 2);
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], (0x200, 0x00E0, "CLS".to_string()));
     }

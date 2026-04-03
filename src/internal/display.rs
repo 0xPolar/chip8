@@ -22,6 +22,10 @@ impl Display {
         return self.buffer[y * DISPLAY_WIDTH + x];
     }
 
+    pub fn buffer(&self) -> &[bool; BUFFER_SIZE] {
+        &self.buffer
+    }
+
     pub fn draw_sprite(&mut self, x_start: usize, y_start: usize, sprite_bytes: &[u8]) -> bool {
         let mut collision = false;
 
