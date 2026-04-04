@@ -1,47 +1,12 @@
 mod debugger;
 mod internal;
 
+use internal::audio::AudioSystem;
 use internal::chip8::Chip8;
-use internal::graphics::GraphicsWindow;
-
-use crate::internal::audio::AudioSystem;
+use internal::graphics::AppWindow;
 
 fn read_rom(rom_path: String) -> Result<Vec<u8>, String> {
-    std::fs::read(rom_path).map_err(|err| format!("Failed to Read ROM: {}", err))
+    std::fs::read(rom_path).map_err(|err| format!("Failed to read ROM: {}", err))
 }
 
-fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    let rom_path = &args[1];
-
-    let rom_bytes = read_rom(rom_path.to_string()).unwrap();
-    let rom = &rom_bytes[..];
-
-    let mut c8 = Chip8::new();
-
-    c8.load_rom(rom).unwrap_or_else(|err| err.to_string());
-
-    let mut window = GraphicsWindow::new();
-
-    let mut audio = AudioSystem::new();
-
-    while !window.should_close() {
-        let dt = window.get_frame_time();
-
-        window.update_keypad(&mut c8.keypad);
-
-        let cycles = (500.0 * dt) as usize;
-        for _ in 0..cycles.max(1) {
-            c8.tick();
-        }
-
-        let timer_ticks = (60.0 * dt) as usize;
-        for _ in 0..timer_ticks {
-            c8.tick_times();
-        }
-
-        audio.update(c8.sound_active());
-
-        window.draw(&c8.display);
-    }
-}
+fn main() {}

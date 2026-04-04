@@ -50,4 +50,50 @@ impl AppWindow {
             event_pump,
         }
     }
+
+    fn update_keypad(&mut self, keypad: &mut Keypad) {
+        const KEY_MAP: [(Scancode, usize); 16] = [
+            (Scancode::X, 0x0),
+            (Scancode::Num1, 0x1),
+            (Scancode::Num2, 0x2),
+            (Scancode::Num3, 0x3),
+            (Scancode::Q, 0x4),
+            (Scancode::W, 0x5),
+            (Scancode::E, 0x6),
+            (Scancode::A, 0x7),
+            (Scancode::S, 0x8),
+            (Scancode::D, 0x9),
+            (Scancode::Z, 0xA),
+            (Scancode::C, 0xB),
+            (Scancode::Num4, 0xC),
+            (Scancode::R, 0xD),
+            (Scancode::F, 0xE),
+            (Scancode::V, 0xF),
+        ];
+
+        let keyboard = self.event_pump.keyboard_state();
+        for (scancode, idx) in KEY_MAP {
+            if keyboard.is_scancode_pressed(scancode) {
+                keypad.press(idx);
+            } else {
+                keypad.release(idx);
+            }
+        }
+    }
+
+    pub fn process_events(&mut self, keyboard: &mut Keypad) -> bool {
+        for event in self.event_pump.poll_iter() {
+            match event {
+                Event::Quit { .. } => return true,
+                _ => {}
+            }
+        }
+
+        self.update_keypad(keyboard);
+        false
+    }
+
+    pub fn swap(&self) {
+        self.window.gl_swap_window();
+    }
 }
