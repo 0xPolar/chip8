@@ -41,6 +41,8 @@ fn main() {
         }
         audio.update(c8.sound_active());
 
+        window.upadte_texture(&c8.display);
+        window.clear();
         window.swap();
     }
 }
