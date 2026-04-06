@@ -13,7 +13,7 @@ pub fn draw_all(ui: &imgui::Ui, state: &mut DebugState, texture_id: imgui::Textu
     draw_stack(ui, &state.snapshot);
     draw_controls(ui, state);
     draw_disassembly(ui, &state.snapshot, &mut state.breakpoints);
-    draw_memoty(ui, &state.snapshot);
+    draw_memory(ui, &state.snapshot);
 }
 
 fn draw_game_display(ui: &imgui::Ui, chip8_tex: imgui::TextureId) {

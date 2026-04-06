@@ -157,7 +157,7 @@ impl AppWindow {
         }
     }
 
-    pub fn frame<F: Fn(&imgui::Ui)>(&mut self, display: &Display, draw: F) -> f32 {
+    pub fn frame<F: FnOnce(&imgui::Ui)>(&mut self, display: &Display, draw: F) -> f32 {
         let now = std::time::Instant::now();
         let dt = (now - self.last_frame).as_secs_f32();
         self.last_frame = now;
