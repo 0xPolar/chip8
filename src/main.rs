@@ -23,12 +23,19 @@ fn main() {
 
     let mut last_frame = std::time::Instant::now();
     loop {
-        let dt = last_frame.elapsed().as_secs_f32();
-        last_frame = std::time::Instant::now();
-
         if window.process_events(&mut c8.keypad) {
             break;
         }
+
+        let tex_id = window.chip8_texture_id();
+
+        let dt = window.frame(&c8.display, |ui| {
+            ui.window("CHIP-8")
+                .size([528.0, 288.0], imgui::Condition::FirstUseEver)
+                .build(|| {
+                    imgui::Image::new(tex_id, [512.0, 256.0]).build(&ui);
+                });
+        });
 
         let cycles = (500.0 * dt) as usize;
         for _ in 0..cycles.max(1) {
@@ -40,9 +47,5 @@ fn main() {
             c8.tick_times();
         }
         audio.update(c8.sound_active());
-
-        window.upadte_texture(&c8.display);
-        window.clear();
-        window.swap();
     }
 }

@@ -157,6 +157,38 @@ impl AppWindow {
         }
     }
 
+    pub fn frame<F: Fn(&imgui::Ui)>(&mut self, display: &Display, draw: F) -> f32 {
+        let now = std::time::Instant::now();
+        let dt = (now - self.last_frame).as_secs_f32();
+        self.last_frame = now;
+
+        self.platform
+            .prepare_frame(&mut self.imgui, &self.window, &self.event_pump);
+
+        let ui = self.imgui.new_frame();
+
+        draw(ui);
+
+        self.upadte_texture(&display);
+
+        let draw_data = self.imgui.render();
+
+        let gl = self.renderer.gl_context();
+
+        unsafe {
+            gl.clear_color(0.1, 0.1, 0.1, 1.0);
+            gl.clear(glow::COLOR_BUFFER_BIT);
+        }
+
+        self.renderer
+            .render(draw_data)
+            .expect("Failed to render ImGui");
+
+        self.window.gl_swap_window();
+
+        dt
+    }
+
     fn update_keypad(&mut self, keypad: &mut Keypad) {
         const KEY_MAP: [(Scancode, usize); 16] = [
             (Scancode::X, 0x0),
@@ -189,13 +221,20 @@ impl AppWindow {
 
     pub fn process_events(&mut self, keyboard: &mut Keypad) -> bool {
         for event in self.event_pump.poll_iter() {
+            self.platform.handle_event(&mut self.imgui, &event);
             match event {
                 Event::Quit { .. } => return true,
                 _ => {}
             }
         }
 
-        self.update_keypad(keyboard);
+        if self.imgui.io().want_capture_keyboard {
+            self.update_keypad(keyboard);
+        }
         false
+    }
+
+    pub fn chip8_texture_id(&self) -> imgui::TextureId {
+        self.texture_id
     }
 }
