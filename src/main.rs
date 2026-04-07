@@ -6,6 +6,10 @@ use internal::audio::AudioSystem;
 use internal::chip8::Chip8;
 use internal::graphics::AppWindow;
 
+use std::time::{Duration, Instant};
+
+const TARGET_FPS: f64 = 60.0;
+
 fn read_rom(rom_path: String) -> Result<Vec<u8>, String> {
     std::fs::read(rom_path).map_err(|err| format!("Failed to read ROM: {}", err))
 }
@@ -24,8 +28,10 @@ fn main() {
     let mut debug_state = DebugState::new();
 
     let reset_rom = rom_bytes.clone();
+    let frame_duration = Duration::from_secs_f64(1.0 / TARGET_FPS);
 
     loop {
+        let frame_start = Instant::now();
         if window.process_events(&mut c8.keypad) {
             break;
         }
@@ -64,5 +70,10 @@ fn main() {
             c8.tick_times();
         }
         audio.update(c8.sound_active());
+
+        let elapsed = frame_start.elapsed();
+        if elapsed < frame_duration {
+            std::thread::sleep(frame_duration - elapsed);
+        }
     }
 }

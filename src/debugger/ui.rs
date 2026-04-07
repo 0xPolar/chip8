@@ -231,7 +231,11 @@ fn draw_disassembly(
                             toggle_breakpoint(breakpoints, *addr);
                         }
                     } else if is_breakpoint {
-                        ui.text_colored([1.0, 0.3, 0.3, 1.0], &text);
+                        let _color =
+                            ui.push_style_color(imgui::StyleColor::Text, [1.0, 0.3, 0.3, 1.0]);
+                        if ui.selectable(&text) {
+                            toggle_breakpoint(breakpoints, *addr);
+                        }
                     } else {
                         if ui.selectable(&text) {
                             toggle_breakpoint(breakpoints, *addr);

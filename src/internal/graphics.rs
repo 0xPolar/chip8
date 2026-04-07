@@ -66,10 +66,10 @@ impl AppWindow {
         let mut renderer =
             AutoRenderer::new(gl, &mut imgui_context).expect("Failed to create ImGui renderer");
 
-        // Enable VSync
+        // Disable VSync — frame rate is controlled by TARGET_FPS in main
         video
-            .gl_set_swap_interval(sdl2::video::SwapInterval::VSync)
-            .expect("Failed to set VSync");
+            .gl_set_swap_interval(sdl2::video::SwapInterval::Immediate)
+            .expect("Failed to set swap interval");
 
         // Create the CHIP-8 display texture using the renderer's GL context
         let chip8_texture = unsafe {
