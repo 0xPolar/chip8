@@ -18,10 +18,6 @@ impl Display {
         self.buffer = [false; BUFFER_SIZE];
     }
 
-    pub fn get_pixel(&self, x: usize, y: usize) -> bool {
-        return self.buffer[y * DISPLAY_WIDTH + x];
-    }
-
     pub fn buffer(&self) -> &[bool; BUFFER_SIZE] {
         &self.buffer
     }

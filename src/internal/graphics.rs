@@ -12,7 +12,7 @@ use super::display::Display;
 use super::keypad::Keypad;
 
 pub struct AppWindow {
-    sdl: sdl2::Sdl,
+    _sdl: sdl2::Sdl,
     imgui: imgui::Context,
 
     window: sdl2::video::Window,
@@ -116,7 +116,7 @@ impl AppWindow {
         let event_pump = sdl.event_pump().expect("Failed to create event pump");
 
         AppWindow {
-            sdl,
+            _sdl: sdl,
             imgui: imgui_context,
             window,
             platform,

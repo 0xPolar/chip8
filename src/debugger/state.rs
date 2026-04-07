@@ -79,9 +79,4 @@ impl DebugState {
         !self.paused || self.step_requested
     }
 
-    pub fn toggle_breakpoint(&mut self, idx: u16) {
-        if !self.breakpoints.remove(&idx) {
-            self.breakpoints.insert(idx);
-        }
-    }
 }
