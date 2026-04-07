@@ -1,74 +1,217 @@
-use super::display::{DISPLAY_HEIGHT, DISPLAY_WIDTH, Display};
+use sdl2::event::Event;
+use sdl2::keyboard::Scancode;
+use sdl2::video::GLProfile;
+
+use glow::HasContext;
+
+use imgui;
+use imgui_glow_renderer::{AutoRenderer, TextureMap};
+use imgui_sdl2_support::SdlPlatform;
+
+use super::display::Display;
 use super::keypad::Keypad;
-use raylib::prelude::*;
 
-const SCALE: i32 = 10;
+pub struct AppWindow {
+    _sdl: sdl2::Sdl,
+    imgui: imgui::Context,
 
-pub struct GraphicsWindow {
-    rl: RaylibHandle,
-    thread: RaylibThread,
+    window: sdl2::video::Window,
+    platform: SdlPlatform,
+    renderer: AutoRenderer,
+
+    event_pump: sdl2::EventPump,
+
+    _gl_context: sdl2::video::GLContext,
+    texture: glow::NativeTexture,
+    texture_id: imgui::TextureId,
+
+    last_frame: std::time::Instant,
 }
 
-impl GraphicsWindow {
+impl AppWindow {
     pub fn new() -> Self {
-        let (mut rl, thread) = raylib::init()
-            .size(DISPLAY_WIDTH as i32 * SCALE, DISPLAY_HEIGHT as i32 * SCALE)
-            .title("CHIP-8")
-            .build();
+        //Initalize SDL2 video module
+        let sdl = sdl2::init().expect("Failed to init SDL2");
+        let mut imgui_context = imgui::Context::create();
+        let video = sdl.video().expect("Failed to init SDL2 Video");
 
-        rl.set_target_fps(60);
+        imgui_context.set_ini_filename(None);
 
-        GraphicsWindow {
-            rl: rl,
-            thread: thread,
+        // Configure OpenGL version
+        let gl_attr = video.gl_attr();
+        gl_attr.set_context_profile(GLProfile::Core);
+        gl_attr.set_context_version(3, 3);
+
+        // Create Window
+        let window = video
+            .window("CHIP8", 1100, 700)
+            .opengl()
+            .resizable()
+            .position_centered()
+            .build()
+            .expect("Failed to create window");
+
+        // Create OpenGL context
+        let gl_context = window
+            .gl_create_context()
+            .expect("Failed to create OpenGL context");
+
+        // Load OpenGL function pointers
+        let gl = unsafe {
+            glow::Context::from_loader_function(|name| video.gl_get_proc_address(name) as *const _)
+        };
+
+        let platform = SdlPlatform::new(&mut imgui_context);
+
+        let mut renderer =
+            AutoRenderer::new(gl, &mut imgui_context).expect("Failed to create ImGui renderer");
+
+        // Disable VSync — frame rate is controlled by TARGET_FPS in main
+        video
+            .gl_set_swap_interval(sdl2::video::SwapInterval::Immediate)
+            .expect("Failed to set swap interval");
+
+        // Create the CHIP-8 display texture using the renderer's GL context
+        let chip8_texture = unsafe {
+            let gl = renderer.gl_context();
+            let texture = gl.create_texture().expect("Failed to create texture");
+
+            gl.bind_texture(glow::TEXTURE_2D, Some(texture));
+
+            gl.tex_parameter_i32(
+                glow::TEXTURE_2D,
+                glow::TEXTURE_MIN_FILTER,
+                glow::NEAREST as i32,
+            );
+            gl.tex_parameter_i32(
+                glow::TEXTURE_2D,
+                glow::TEXTURE_MAG_FILTER,
+                glow::NEAREST as i32,
+            );
+
+            let pixels: Option<&[u8]> = None;
+
+            gl.tex_image_2d(
+                glow::TEXTURE_2D,
+                0,
+                glow::RGBA as i32,
+                64,
+                32,
+                0,
+                glow::RGBA,
+                glow::UNSIGNED_BYTE,
+                pixels,
+            );
+
+            gl.bind_texture(glow::TEXTURE_2D, None);
+
+            texture
+        };
+
+        let texture_id = renderer
+            .texture_map_mut()
+            .register(chip8_texture)
+            .expect("Failed to register texture");
+
+        let event_pump = sdl.event_pump().expect("Failed to create event pump");
+
+        AppWindow {
+            _sdl: sdl,
+            imgui: imgui_context,
+            window,
+            platform,
+            renderer,
+            _gl_context: gl_context,
+            texture: chip8_texture,
+            texture_id: texture_id,
+            last_frame: std::time::Instant::now(),
+            event_pump,
         }
     }
 
-    pub fn should_close(&self) -> bool {
-        self.rl.window_should_close()
-    }
-
-    pub fn draw(&mut self, display: &Display) {
-        let mut d = self.rl.begin_drawing(&self.thread);
-        d.clear_background(Color::BLACK);
-
-        for y in 0..DISPLAY_HEIGHT {
-            for x in 0..DISPLAY_WIDTH {
-                if display.get_pixel(x, y) {
-                    d.draw_rectangle(
-                        x as i32 * SCALE,
-                        y as i32 * SCALE,
-                        SCALE,
-                        SCALE,
-                        Color::WHITE,
-                    );
-                }
+    pub fn upadte_texture(&self, display: &Display) {
+        let mut pixels: Vec<u8> = Vec::with_capacity(64 * 32 * 4);
+        for &on in display.buffer().iter() {
+            if on {
+                pixels.extend_from_slice(&[255, 255, 255, 255]);
+            } else {
+                pixels.extend_from_slice(&[0, 0, 0, 255]);
             }
         }
+
+        let gl = self.renderer.gl_context();
+        unsafe {
+            gl.bind_texture(glow::TEXTURE_2D, Some(self.texture));
+            gl.tex_sub_image_2d(
+                glow::TEXTURE_2D,
+                0, // mip level
+                0,
+                0, // x, y offset (start at top-left)
+                64,
+                32, // width, height
+                glow::RGBA,
+                glow::UNSIGNED_BYTE,
+                glow::PixelUnpackData::Slice(&pixels), // ignore:
+            );
+            gl.bind_texture(glow::TEXTURE_2D, None);
+        }
     }
 
-    pub fn update_keypad(&self, keypad: &mut Keypad) {
-        const KEY_MAP: [(KeyboardKey, usize); 16] = [
-            (KeyboardKey::KEY_X, 0x0),
-            (KeyboardKey::KEY_ONE, 0x1),
-            (KeyboardKey::KEY_TWO, 0x2),
-            (KeyboardKey::KEY_THREE, 0x3),
-            (KeyboardKey::KEY_Q, 0x4),
-            (KeyboardKey::KEY_W, 0x5),
-            (KeyboardKey::KEY_E, 0x6),
-            (KeyboardKey::KEY_A, 0x7),
-            (KeyboardKey::KEY_S, 0x8),
-            (KeyboardKey::KEY_D, 0x9),
-            (KeyboardKey::KEY_Z, 0xA),
-            (KeyboardKey::KEY_C, 0xB),
-            (KeyboardKey::KEY_FOUR, 0xC),
-            (KeyboardKey::KEY_R, 0xD),
-            (KeyboardKey::KEY_F, 0xE),
-            (KeyboardKey::KEY_V, 0xF),
+    pub fn frame<F: FnOnce(&imgui::Ui)>(&mut self, display: &Display, draw: F) -> f32 {
+        let now = std::time::Instant::now();
+        let dt = (now - self.last_frame).as_secs_f32();
+        self.last_frame = now;
+
+        self.platform
+            .prepare_frame(&mut self.imgui, &self.window, &self.event_pump);
+
+        let ui = self.imgui.new_frame();
+
+        draw(ui);
+
+        self.upadte_texture(&display);
+
+        let draw_data = self.imgui.render();
+
+        let gl = self.renderer.gl_context();
+
+        unsafe {
+            gl.clear_color(0.1, 0.1, 0.1, 1.0);
+            gl.clear(glow::COLOR_BUFFER_BIT);
+        }
+
+        self.renderer
+            .render(draw_data)
+            .expect("Failed to render ImGui");
+
+        self.window.gl_swap_window();
+
+        dt
+    }
+
+    fn update_keypad(&mut self, keypad: &mut Keypad) {
+        const KEY_MAP: [(Scancode, usize); 16] = [
+            (Scancode::X, 0x0),
+            (Scancode::Num1, 0x1),
+            (Scancode::Num2, 0x2),
+            (Scancode::Num3, 0x3),
+            (Scancode::Q, 0x4),
+            (Scancode::W, 0x5),
+            (Scancode::E, 0x6),
+            (Scancode::A, 0x7),
+            (Scancode::S, 0x8),
+            (Scancode::D, 0x9),
+            (Scancode::Z, 0xA),
+            (Scancode::C, 0xB),
+            (Scancode::Num4, 0xC),
+            (Scancode::R, 0xD),
+            (Scancode::F, 0xE),
+            (Scancode::V, 0xF),
         ];
 
-        for (key, idx) in KEY_MAP {
-            if self.rl.is_key_down(key) {
+        let keyboard = self.event_pump.keyboard_state();
+        for (scancode, idx) in KEY_MAP {
+            if keyboard.is_scancode_pressed(scancode) {
                 keypad.press(idx);
             } else {
                 keypad.release(idx);
@@ -76,7 +219,22 @@ impl GraphicsWindow {
         }
     }
 
-    pub fn get_frame_time(&self) -> f32 {
-        self.rl.get_frame_time()
+    pub fn process_events(&mut self, keyboard: &mut Keypad) -> bool {
+        for event in self.event_pump.poll_iter() {
+            self.platform.handle_event(&mut self.imgui, &event);
+            match event {
+                Event::Quit { .. } => return true,
+                _ => {}
+            }
+        }
+
+        if !self.imgui.io().want_capture_keyboard {
+            self.update_keypad(keyboard);
+        }
+        false
+    }
+
+    pub fn chip8_texture_id(&self) -> imgui::TextureId {
+        self.texture_id
     }
 }

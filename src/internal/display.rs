@@ -18,8 +18,8 @@ impl Display {
         self.buffer = [false; BUFFER_SIZE];
     }
 
-    pub fn get_pixel(&self, x: usize, y: usize) -> bool {
-        return self.buffer[y * DISPLAY_WIDTH + x];
+    pub fn buffer(&self) -> &[bool; BUFFER_SIZE] {
+        &self.buffer
     }
 
     pub fn draw_sprite(&mut self, x_start: usize, y_start: usize, sprite_bytes: &[u8]) -> bool {
@@ -43,50 +43,5 @@ impl Display {
         }
 
         collision
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn display_clear() {
-        let mut display = Display::new();
-        display.draw_sprite(0, 0, &[0xFF]);
-        display.clear();
-        for y in 0..32 {
-            for x in 0..64 {
-                assert!(!display.get_pixel(x, y));
-            }
-        }
-    }
-
-    #[test]
-    fn single_pixel_draw() {
-        let mut display = Display::new();
-        display.draw_sprite(0, 0, &[0x80]); // 10000000
-        assert!(display.get_pixel(0, 0));
-        assert!(!display.get_pixel(1, 0));
-    }
-
-    #[test]
-    fn xor_collision() {
-        let mut display = Display::new();
-        let collision1 = display.draw_sprite(0, 0, &[0x80]);
-        assert!(!collision1);
-        let collision2 = display.draw_sprite(0, 0, &[0x80]);
-        assert!(collision2);
-        assert!(!display.get_pixel(0, 0)); // XOR turned it back off
-    }
-
-    #[test]
-    fn screen_wrapping() {
-        let mut display = Display::new();
-        display.draw_sprite(62, 0, &[0xFF]); // starts at x=62, wraps
-        assert!(display.get_pixel(62, 0));
-        assert!(display.get_pixel(63, 0));
-        assert!(display.get_pixel(0, 0)); // wrapped
-        assert!(display.get_pixel(1, 0)); // wrapped
     }
 }

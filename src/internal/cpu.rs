@@ -1,8 +1,6 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
-use std::fmt::Error;
-
-use rand::{Rng, RngExt};
+use rand::RngExt;
 
 use crate::internal::{display::Display, keypad::Keypad};
 
@@ -41,15 +39,53 @@ impl CPU {
         }
     }
 
+    pub fn registers(&self) -> &[u8; 16] {
+        &self.regs
+    }
+
+    pub fn index(&self) -> u16 {
+        self.index
+    }
+
+    pub fn program_counter(&self) -> u16 {
+        self.PC
+    }
+
+    pub fn stack_pointer(&self) -> u8 {
+        self.SP
+    }
+
+    pub fn stack(&self) -> &[u16; 16] {
+        &self.stack
+    }
+
+    pub fn delay_timer(&self) -> u8 {
+        self.DT
+    }
+
     pub fn sound_timer(&self) -> u8 {
         self.ST
     }
 
-    pub fn fetch(&mut self, memory: &[u8; 4096]) -> u16 {
-        let high_byte = memory[self.PC as usize];
-        let low_byte = memory[self.PC as usize + 1];
+    pub fn waiting(&self) -> bool {
+        self.waiting.is_some()
+    }
 
-        self.PC += 2;
+    // pub fn fetch(&mut self, memory: &[u8; 4096]) -> u16 {
+    //     let high_byte = memory[self.PC as usize];
+    //     let low_byte = memory[self.PC as usize + 1];
+    //
+    //     self.PC += 2;
+    //
+    //     return (high_byte as u16) << 8 | (low_byte as u16);
+    // }
+
+    pub fn fetch(&mut self, memory: &[u8; 4096]) -> u16 {
+        let addr = self.PC as usize & 0xFFF;
+        let high_byte = memory[addr];
+        let low_byte = memory[(addr + 1) & 0xFFF];
+
+        self.PC = (self.PC + 2) & 0xFFF;
 
         return (high_byte as u16) << 8 | (low_byte as u16);
     }
@@ -257,7 +293,7 @@ impl CPU {
 
     // Skip next instruction if Vx != Vy
     fn SNEVxVy(cpu: &mut CPU, Rx: usize, Ry: usize) {
-        if (cpu.regs[Rx] != cpu.regs[Ry]) {
+        if cpu.regs[Rx] != cpu.regs[Ry] {
             cpu.PC += 2;
         }
     }
