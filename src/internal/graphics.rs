@@ -228,7 +228,7 @@ impl AppWindow {
             }
         }
 
-        if self.imgui.io().want_capture_keyboard {
+        if !self.imgui.io().want_capture_keyboard {
             self.update_keypad(keyboard);
         }
         false
