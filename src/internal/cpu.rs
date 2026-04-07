@@ -1,8 +1,6 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
-use std::fmt::Error;
-
-use rand::{Rng, RngExt};
+use rand::RngExt;
 
 use crate::internal::{display::Display, keypad::Keypad};
 
@@ -295,7 +293,7 @@ impl CPU {
 
     // Skip next instruction if Vx != Vy
     fn SNEVxVy(cpu: &mut CPU, Rx: usize, Ry: usize) {
-        if (cpu.regs[Rx] != cpu.regs[Ry]) {
+        if cpu.regs[Rx] != cpu.regs[Ry] {
             cpu.PC += 2;
         }
     }

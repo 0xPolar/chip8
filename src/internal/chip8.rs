@@ -33,7 +33,7 @@ impl Chip8 {
 
     pub fn tick(&mut self) {
         let opcode = self.cpu.fetch(&self.memory);
-        self.cpu
+        let _ = self.cpu
             .execute(opcode, &mut self.memory, &mut self.display, &self.keypad);
     }
 

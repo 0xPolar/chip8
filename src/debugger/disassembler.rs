@@ -61,7 +61,7 @@ pub fn disassemble_region(memory: &[u8], start: u16, count: usize) -> Vec<(u16, 
     let mut result = Vec::new();
     let mut address = start;
 
-    for i in 0..count {
+    for _ in 0..count {
         let idx = address as usize;
 
         if idx + 1 >= memory.len() {
