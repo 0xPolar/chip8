@@ -41,6 +41,7 @@ pub struct DebugState {
     pub paused: bool,
     pub step_requested: bool,
     pub breakpoints: HashSet<u16>,
+    pub reset_requested: bool,
 }
 
 impl DebugState {
@@ -50,6 +51,7 @@ impl DebugState {
             paused: false,
             step_requested: false,
             breakpoints: HashSet::new(),
+            reset_requested: false,
         }
     }
 

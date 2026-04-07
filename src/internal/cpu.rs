@@ -73,11 +73,21 @@ impl CPU {
         self.waiting.is_some()
     }
 
-    pub fn fetch(&mut self, memory: &[u8; 4096]) -> u16 {
-        let high_byte = memory[self.PC as usize];
-        let low_byte = memory[self.PC as usize + 1];
+    // pub fn fetch(&mut self, memory: &[u8; 4096]) -> u16 {
+    //     let high_byte = memory[self.PC as usize];
+    //     let low_byte = memory[self.PC as usize + 1];
+    //
+    //     self.PC += 2;
+    //
+    //     return (high_byte as u16) << 8 | (low_byte as u16);
+    // }
 
-        self.PC += 2;
+    pub fn fetch(&mut self, memory: &[u8; 4096]) -> u16 {
+        let addr = self.PC as usize & 0xFFF;
+        let high_byte = memory[addr];
+        let low_byte = memory[(addr + 1) & 0xFFF];
+
+        self.PC = (self.PC + 2) & 0xFFF;
 
         return (high_byte as u16) << 8 | (low_byte as u16);
     }
