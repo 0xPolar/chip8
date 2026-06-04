@@ -1,32 +1,36 @@
 # CHIP-8 Emulator
 
-A CHIP-8 emulator written in Rust using raylib for graphics and input handling.
-
-## Why I Built This
-
-I built this project to learn Rust and explore how emulators work at a low level. CHIP-8 is a great starting point for emulation — it has a simple architecture but still covers all the fundamentals: fetch-decode-execute cycles, memory-mapped I/O, timers, sprite rendering, and input handling.
-
-<!-- TODO: Add a screenshot of the emulator running a ROM -->
-<!-- ![Screenshot](screenshot.png) -->
+A CHIP-8 emulator and debugger written in Rust. It uses SDL2 and OpenGL for the
+window and display, ImGui for the debugger interface, and rodio for audio.
 
 ## Features
 
-- Complete CHIP-8 instruction set (35 opcodes)
-- 64x32 pixel display rendered at 10x scale (640x320 window)
-- 16-key hexadecimal keypad mapped to QWERTY keyboard
-- 60Hz delay and sound timers
-- XOR-based sprite drawing with collision detection
-- Accurate cycle timing scaled to ~500Hz CPU speed
+- CHIP-8 CPU with the standard 35-opcode instruction set
+- 4 KB memory, built-in CHIP-8 font data, stack, keypad, and timers
+- 64x32 monochrome display with XOR sprite drawing and collision detection
+- Resizable SDL2/OpenGL window with nearest-neighbor display scaling
+- 440 Hz tone while the CHIP-8 sound timer is active
+- CPU execution at approximately 500 Hz and timers at 60 Hz
+- Integrated debugger with:
+  - Register, timer, stack, and memory views
+  - Current-instruction and nearby-disassembly views
+  - Clickable breakpoints
+  - Pause, resume, single-step, and reset controls
 
 ## Getting Started
 
 ### Prerequisites
 
-- [Rust toolchain](https://rustup.rs/) (edition 2024)
-- On Linux, install raylib dependencies:
-  ```bash
-  sudo apt install libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl-dev cmake
-  ```
+- [Rust toolchain](https://rustup.rs/) with support for Rust edition 2024
+- CMake and native OpenGL/audio development libraries
+
+On Ubuntu or Debian:
+
+```bash
+sudo apt install cmake pkg-config libgl-dev libasound2-dev
+```
+
+SDL2 is built from source by the `sdl2` crate's `bundled` feature.
 
 ### Build
 
@@ -36,15 +40,18 @@ cargo build --release
 
 ### Run
 
-Pass a ROM file as a command-line argument:
+Pass a CHIP-8 ROM path as the first command-line argument:
 
 ```bash
-cargo run --release -- path/to/rom.ch8
+cargo run --release -- roms/pong.ch8
 ```
 
-## Keyboard Mapping
+The repository includes `ibm.ch8`, `pong.ch8`, and `RPS.ch8` in the `roms/`
+directory.
 
-The CHIP-8 hex keypad is mapped to your keyboard as follows:
+## Controls
+
+The CHIP-8 hexadecimal keypad is mapped to a QWERTY keyboard:
 
 | CHIP-8 | Keyboard |
 |--------|----------|
@@ -53,27 +60,42 @@ The CHIP-8 hex keypad is mapped to your keyboard as follows:
 | `7` `8` `9` `E` | `A` `S` `D` `F` |
 | `A` `0` `B` `F` | `Z` `X` `C` `V` |
 
-## Running Tests
+The debugger controls are available in the right-hand **Controls** panel. Click
+an instruction in the disassembly view to toggle a breakpoint.
+
+## Testing
 
 ```bash
 cargo test
 ```
 
-The test suite covers CPU instruction decoding and execution, display rendering and sprite collision, memory layout and ROM loading.
+The unit tests cover CPU instructions, timers, keypad behavior, ROM and font
+loading, display rendering and collision detection, and disassembly.
 
-## Architecture
+## Project Structure
 
-```
-src/
-├── main.rs              # Entry point, main loop
-└── internal/
-    ├── chip8.rs         # Emulator core — memory, ROM loading, font data
-    ├── cpu.rs           # CPU registers, instruction fetch/decode/execute
-    ├── display.rs       # 64x32 pixel buffer, sprite drawing, collision
-    ├── graphics.rs      # Raylib window, rendering, input polling
-    ├── keypad.rs        # 16-key input state and key mapping
-    ├── font.rs          # Built-in 4x5 font sprites
-    └── audio.rs         # Sound (stub)
+```text
+.
+|-- .github/workflows/ci.yml   # Windows/Linux test, build, and release workflow
+|-- roms/                      # Example CHIP-8 ROMs
+|-- src/
+|   |-- debugger/
+|   |   |-- disassembler.rs    # Opcode disassembly
+|   |   |-- state.rs           # Emulator snapshots and debugger state
+|   |   |-- ui.rs              # ImGui debugger panels and controls
+|   |   `-- mod.rs
+|   |-- internal/
+|   |   |-- audio.rs           # Rodio sound-timer tone
+|   |   |-- chip8.rs           # Emulator core, memory, and ROM loading
+|   |   |-- cpu.rs             # Fetch, decode, execute, registers, and timers
+|   |   |-- display.rs         # 64x32 display buffer and sprite drawing
+|   |   |-- font.rs            # Built-in CHIP-8 font sprites
+|   |   |-- graphics.rs        # SDL2, OpenGL, ImGui, and keyboard input
+|   |   |-- keypad.rs          # CHIP-8 keypad state
+|   |   `-- mod.rs
+|   `-- main.rs                # Application loop and debugger integration
+|-- Cargo.toml                 # Package metadata and dependencies
+`-- Cargo.lock                 # Locked dependency versions
 ```
 
 ## License
